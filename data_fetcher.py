@@ -5,9 +5,13 @@ Handles data retrieval from Yahoo Finance and feature engineering.
 
 import pandas as pd
 import numpy as np
-import yfinance as yf
 from datetime import datetime, timedelta
 import warnings
+
+try:
+    import yfinance as yf
+except ImportError:
+    raise ImportError("yfinance library not found. Please install: pip install yfinance")
 
 warnings.filterwarnings('ignore')
 
