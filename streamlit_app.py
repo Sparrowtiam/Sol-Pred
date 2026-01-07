@@ -458,12 +458,9 @@ with tab3:
             </div>
             """, unsafe_allow_html=True)
         
-        **Expected Price (7d)**: ${signal.get('Forecast_Price', current_price):.2f}
-        """)
-        
         # Signal conditions
         if signal.get('Details'):
-            st.subheader("Signal Conditions")
+            st.markdown("### 📋 Signal Conditions")
             for detail in signal['Details']:
                 st.write(f"• {detail}")
         
