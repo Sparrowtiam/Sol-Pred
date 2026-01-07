@@ -9,19 +9,20 @@ import numpy as np
 from datetime import datetime, timedelta
 import sys
 import os
+import matplotlib.pyplot as plt
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import plotly
-import plotly.graph_objects as go
-import plotly.express as px
-
 # Import local modules
-from data_fetcher import prepare_full_data, get_latest_price
-from model import train_prophet_model, forecast_future, get_forecast_statistics, get_support_resistance_levels
-from signals import SignalGenerator
-from backtester import BacktestEngine
+try:
+    from data_fetcher import prepare_full_data, get_latest_price
+    from model import train_prophet_model, forecast_future, get_forecast_statistics, get_support_resistance_levels
+    from signals import SignalGenerator
+    from backtester import BacktestEngine
+except ImportError as e:
+    st.error(f"Error importing modules: {e}")
+    st.stop()
 
 # Page configuration
 st.set_page_config(
@@ -114,60 +115,35 @@ with tab1:
             change_30d = ((forecast_30d - current_price) / current_price) * 100
             st.metric("30-Day Forecast", f"${float(forecast_30d):.2f}", f"{change_30d:+.2f}%")
         
-        # Create forecast chart
+        # Create forecast chart using matplotlib
         st.subheader("Price Forecast with Confidence Intervals")
         
-        fig = go.Figure()
+        fig, ax = plt.subplots(figsize=(12, 6))
         
         # Historical prices
-        fig.add_trace(go.Scatter(
-            x=raw_df.index,
-            y=raw_df['Close'],
-            mode='lines',
-            name='Historical Price',
-            line=dict(color='blue', width=2),
-            opacity=0.7
-        ))
+        ax.plot(raw_df.index, raw_df['Close'], label='Historical Price', color='blue', linewidth=2, alpha=0.7)
         
         # Forecast
         future_forecast = forecast_df[forecast_df['Date'] > pd.Timestamp.now()]
-        fig.add_trace(go.Scatter(
-            x=future_forecast['Date'],
-            y=future_forecast['Forecast'],
-            mode='lines',
-            name='Forecast',
-            line=dict(color='green', width=2, dash='dash')
-        ))
+        ax.plot(future_forecast['Date'], future_forecast['Forecast'], label='Forecast', 
+                color='green', linewidth=2, linestyle='--')
         
         # Confidence interval
-        fig.add_trace(go.Scatter(
-            x=future_forecast['Date'],
-            y=future_forecast['Upper_Bound'],
-            fill=None,
-            mode='lines',
-            line_color='rgba(0,100,0,0)',
-            showlegend=False
-        ))
+        if 'Upper_Bound' in future_forecast.columns and 'Lower_Bound' in future_forecast.columns:
+            ax.fill_between(future_forecast['Date'], 
+                            future_forecast['Lower_Bound'],
+                            future_forecast['Upper_Bound'],
+                            alpha=0.2, color='green', label='95% Confidence Interval')
         
-        fig.add_trace(go.Scatter(
-            x=future_forecast['Date'],
-            y=future_forecast['Lower_Bound'],
-            fill='tonexty',
-            mode='lines',
-            line_color='rgba(0,100,0,0)',
-            name='95% Confidence Interval',
-            fillcolor='rgba(0,255,0,0.2)'
-        ))
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price (USD)')
+        ax.set_title('SOL-USD Price Forecast')
+        ax.legend(loc='best')
+        ax.grid(True, alpha=0.3)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
         
-        fig.update_layout(
-            title="SOL-USD Price Forecast",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            hovermode='x unified',
-            height=500
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        st.pyplot(fig)
         
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -229,45 +205,22 @@ with tab2:
         # Moving Averages Chart
         st.subheader("Moving Averages Trend")
         
-        fig = go.Figure()
+        fig, ax = plt.subplots(figsize=(12, 6))
         
-        fig.add_trace(go.Scatter(
-            x=features_df.index,
-            y=features_df['Close'],
-            name='Price',
-            line=dict(color='blue', width=2)
-        ))
+        ax.plot(features_df.index, features_df['Close'], label='Price', color='blue', linewidth=2)
+        ax.plot(features_df.index, features_df['MA7'], label='MA7', color='orange', linewidth=1, linestyle='--')
+        ax.plot(features_df.index, features_df['MA14'], label='MA14', color='red', linewidth=1, linestyle='--')
+        ax.plot(features_df.index, features_df['MA30'], label='MA30', color='purple', linewidth=1, linestyle='--')
         
-        fig.add_trace(go.Scatter(
-            x=features_df.index,
-            y=features_df['MA7'],
-            name='MA7',
-            line=dict(color='orange', width=1, dash='dash')
-        ))
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price (USD)')
+        ax.set_title('Price with Moving Averages')
+        ax.legend(loc='best')
+        ax.grid(True, alpha=0.3)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
         
-        fig.add_trace(go.Scatter(
-            x=features_df.index,
-            y=features_df['MA14'],
-            name='MA14',
-            line=dict(color='red', width=1, dash='dash')
-        ))
-        
-        fig.add_trace(go.Scatter(
-            x=features_df.index,
-            y=features_df['MA30'],
-            name='MA30',
-            line=dict(color='purple', width=1, dash='dash')
-        ))
-        
-        fig.update_layout(
-            title="Price with Moving Averages",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            hovermode='x unified',
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        st.pyplot(fig)
         
     except Exception as e:
         st.error(f"Error in analysis: {e}")
