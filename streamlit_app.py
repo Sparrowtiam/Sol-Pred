@@ -3,19 +3,21 @@ Streamlit App for SOL-USD Price Prediction System
 Interactive web interface for Solana cryptocurrency price forecasting
 """
 
+import streamlit as st
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
 import sys
 import os
-from datetime import datetime, timedelta
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Standard library imports
-import streamlit as st
-import pandas as pd
-import numpy as np
+# Import plotly
 import plotly.graph_objects as go
+import plotly.express as px
 
+# Import local modules
 from data_fetcher import prepare_full_data, get_latest_price
 from model import train_prophet_model, forecast_future, get_forecast_statistics, get_support_resistance_levels
 from signals import SignalGenerator
