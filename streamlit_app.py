@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import sys
 import os
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,39 +27,118 @@ except ImportError as e:
 
 # Page configuration
 st.set_page_config(
-    page_title="SOL-USD Prediction",
-    page_icon="📊",
+    page_title="SOL Price AI Predictor",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom styling
+# Custom styling with enhanced UI
 st.markdown("""
 <style>
+    /* Main container */
     .main {
-        padding: 0rem 0rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
     }
+    
+    /* Header styling */
+    h1 {
+        color: white;
+        text-align: center;
+        font-size: 3em;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    h2 {
+        color: white;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Metric cards */
     .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        text-align: center;
+        margin: 0.5rem;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] button {
         background-color: #f0f2f6;
-        padding: 20px;
         border-radius: 10px;
-        margin: 10px 0;
+        padding: 10px 20px;
+        font-weight: bold;
+        margin: 5px;
+    }
+    
+    /* Info box */
+    .info-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid #FFD700;
+    }
+    
+    /* Success signal */
+    .success-signal {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+    
+    /* Warning signal */
+    .warning-signal {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+    
+    /* Neutral signal */
+    .neutral-signal {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.3em;
+        font-weight: bold;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Page title
-st.title("🚀 SOL-USD Price Prediction System")
-st.subheader("Real-time Cryptocurrency Analysis & Forecasting with Prophet")
+# Page title with emoji
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.markdown("<h1>🚀 SOL Price AI Predictor</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: white; font-size: 1.1em;'>Real-time Solana Price Forecasting & Trading Signals</p>", unsafe_allow_html=True)
 
 # Sidebar
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.markdown("### ⚙️ Configuration")
+    
+    st.markdown("---")
+    st.markdown("**📊 Data Settings**")
     
     data_period = st.selectbox(
         "Historical Data Period",
         ["1y", "2y", "3y", "5y"],
-        index=3
+        index=3,
+        help="How much historical data to analyze"
     )
     
     forecast_days = st.slider(
@@ -66,17 +146,34 @@ with st.sidebar:
         min_value=7,
         max_value=90,
         value=30,
-        step=7
+        step=7,
+        help="How many days ahead to predict"
     )
     
     st.markdown("---")
-    st.markdown("**About This App**")
-    st.info("""
-    This system uses Facebook Prophet for time-series forecasting
-    combined with technical indicators to predict SOL-USD price movements.
+    st.markdown("**ℹ️ About This App**")
     
-    ⚠️ **Disclaimer**: Not financial advice. For educational purposes only.
-    """)
+    st.markdown("""
+    <div class='info-box'>
+    <h4>🤖 AI-Powered Prediction</h4>
+    <p>Uses Facebook Prophet for time-series forecasting combined with 15+ technical indicators to predict SOL-USD price movements in real-time.</p>
+    <hr>
+    <h4>📈 Features</h4>
+    <ul>
+    <li>30-day price forecasts</li>
+    <li>Technical analysis</li>
+    <li>Trading signals</li>
+    <li>12-month backtesting</li>
+    </ul>
+    <hr>
+    <p><strong>⚠️ Disclaimer:</strong> Not financial advice. For educational purposes only.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("**📱 About Developer**")
+    st.markdown("Created by: **Sparrowtiam**")
+    st.markdown("Email: tiamsparrow@gmail.com")
 
 # Main layout
 tab1, tab2, tab3, tab4 = st.tabs(["📈 Forecast", "📊 Analysis", "🎯 Signals", "📉 Backtest"])
@@ -102,21 +199,57 @@ with tab1:
         current_price_val, current_time = get_latest_price()
         current_price = float(current_price_val)
         
-        # Display current price
-        col1, col2, col3 = st.columns(3)
+        # Display key metrics in attractive cards
+        st.markdown("### 💰 Key Price Metrics")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
-            st.metric("Current Price", f"${current_price:.2f}")
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>💵 Current Price</h3>
+                <h2>${current_price:.2f}</h2>
+                <p>Live SOL/USD</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col2:
             forecast_7d = forecast_df[forecast_df['Date'] > pd.Timestamp.now()].iloc[min(6, len(forecast_df)-1)]['Forecast']
             change_7d = ((forecast_7d - current_price) / current_price) * 100
-            st.metric("7-Day Forecast", f"${float(forecast_7d):.2f}", f"{change_7d:+.2f}%")
+            arrow = "📈" if change_7d > 0 else "📉" if change_7d < 0 else "➡️"
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>{arrow} 7-Day Forecast</h3>
+                <h2>${float(forecast_7d):.2f}</h2>
+                <p style='color: {'#11ff00' if change_7d > 0 else '#ff1111'};'>{change_7d:+.2f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col3:
             forecast_30d = forecast_df[forecast_df['Date'] > pd.Timestamp.now()].iloc[min(29, len(forecast_df)-1)]['Forecast']
             change_30d = ((forecast_30d - current_price) / current_price) * 100
-            st.metric("30-Day Forecast", f"${float(forecast_30d):.2f}", f"{change_30d:+.2f}%")
+            arrow = "📈" if change_30d > 0 else "📉" if change_30d < 0 else "➡️"
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>{arrow} 30-Day Forecast</h3>
+                <h2>${float(forecast_30d):.2f}</h2>
+                <p style='color: {'#11ff00' if change_30d > 0 else '#ff1111'};'>{change_30d:+.2f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            avg_forecast = forecast_df['Forecast'].mean()
+            volatility = forecast_df['Forecast'].std()
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>📊 Volatility</h3>
+                <h2>${volatility:.2f}</h2>
+                <p>Std Dev</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Create forecast chart using matplotlib
-        st.subheader("Price Forecast with Confidence Intervals")
+        st.markdown("### 📈 30-Day Price Forecast")
         
         fig, ax = plt.subplots(figsize=(12, 6))
         
@@ -227,7 +360,7 @@ with tab2:
 
 # Tab 3: Signals
 with tab3:
-    st.header("Trading Signals")
+    st.markdown("### 🎯 Trading Signal Analysis")
     
     try:
         raw_df, prophet_df, features_df, model, forecast_df = load_data(data_period)
@@ -242,39 +375,88 @@ with tab3:
         confidence = float(signal['Confidence'])
         
         if signal_type == "BUY":
-            col_color = "green"
+            css_class = "success-signal"
             emoji = "🟢"
+            color = "#11ff00"
         elif signal_type == "SELL":
-            col_color = "red"
+            css_class = "warning-signal"
             emoji = "🔴"
+            color = "#ff1111"
         else:
-            col_color = "gray"
+            css_class = "neutral-signal"
             emoji = "⚪"
+            color = "#00f2fe"
         
-        st.markdown(f"### {emoji} Current Signal: **{signal_type}**")
+        # Large signal display
+        st.markdown(f"""
+        <div class='{css_class}'>
+            <h1>{emoji} {signal_type} SIGNAL</h1>
+            <h2>Confidence: {confidence:.0f}%</h2>
+        </div>
+        """, unsafe_allow_html=True)
         
-        col1, col2, col3 = st.columns(3)
+        # Signal metrics
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Confidence", f"{confidence:.0f}%")
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>🎯 Confidence</h3>
+                <h2>{confidence:.0f}%</h2>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
             upside = float(signal.get('Expected_Upside_Pct', 0))
-            st.metric("Expected Upside", f"{upside:+.2f}%")
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>📈 Expected Upside</h3>
+                <h2>{upside:+.2f}%</h2>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
-            st.metric("Signal Reason", signal['Reason'])
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>💰 Current Price</h3>
+                <h2>${current_price:.2f}</h2>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            forecast_price = float(signal.get('Forecast_Price', current_price))
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>🔮 Target Price</h3>
+                <h2>${forecast_price:.2f}</h2>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Signal details
-        st.subheader("Signal Details")
-        st.info(f"""
-        **Signal Type**: {signal_type}
+        st.markdown("---")
+        st.markdown("### 📋 Signal Details")
         
-        **Confidence Level**: {confidence:.0f}%
+        col1, col2 = st.columns(2)
         
-        **Reason**: {signal['Reason']}
+        with col1:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h4>Signal Information</h4>
+                <p><strong>Type:</strong> {signal_type}</p>
+                <p><strong>Confidence:</strong> {confidence:.0f}%</p>
+                <p><strong>Reason:</strong> {signal['Reason']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        **Current Price**: ${current_price:.2f}
+        with col2:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h4>Price Targets</h4>
+                <p><strong>Current:</strong> ${current_price:.2f}</p>
+                <p><strong>Target:</strong> ${forecast_price:.2f}</p>
+                <p><strong>Expected Move:</strong> {upside:+.2f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         **Expected Price (7d)**: ${signal.get('Forecast_Price', current_price):.2f}
         """)
@@ -356,9 +538,14 @@ with tab4:
 # Footer
 st.markdown("---")
 st.markdown("""
-⚠️ **DISCLAIMER**: This application provides statistical forecasts for educational purposes only. 
-It is NOT financial advice. Cryptocurrency trading involves substantial risk. Past performance does 
-not guarantee future results. Always conduct your own research before making investment decisions.
+<div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px; text-align: center;'>
+    <h3>⚠️ Important Disclaimer</h3>
+    <p>This application provides statistical forecasts for educational purposes only. It is <strong>NOT financial advice</strong>.</p>
+    <p>Cryptocurrency trading involves substantial risk. Past performance does not guarantee future results.</p>
+    <p style='font-weight: bold;'>Always conduct your own research before making investment decisions.</p>
+    <hr>
+    <p><strong>Created by:</strong> Sparrowtiam | <strong>Email:</strong> tiamsparrow@gmail.com</p>
+    <p><strong>Last Updated:</strong> January 2026 | <strong>Version:</strong> 1.0</p>
+</div>
+""", unsafe_allow_html=True)
 
-**Created by**: Sparrowtiam | **Email**: tiamsparrow@gmail.com
-""")
